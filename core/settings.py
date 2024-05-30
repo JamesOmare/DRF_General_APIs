@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from logging import config
 from os import getenv, path
 from pathlib import Path
 from django.core.management.utils import get_random_secret_key
@@ -21,7 +20,7 @@ import sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-dotenv_file = BASE_DIR / ".env.local"
+dotenv_file = BASE_DIR / ".env"
 
 if path.isfile(dotenv_file):
     dotenv.load_dotenv(dotenv_file)
@@ -106,7 +105,7 @@ if DEVELOPMENT_MODE is True:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
+elif len(sys.argv) > 1 and sys.argv[1] != 'collectstatic':
     if getenv("DATABASE_URL", None) is None:
         raise Exception("DATABASE_URL environment variable not defined")
     DATABASES = {
@@ -178,7 +177,7 @@ else:
     AWS_STORAGE_BUCKET_NAME = getenv("AWS_STORAGE_BUCKET_NAME")
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-    AWS_DEFAULT_ACL = 'public-read'
+    AWS_DEFAULT_ACL = None
     AWS_LOCATION='static'
     STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
     STORAGES = {
@@ -211,21 +210,36 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
-SPECTACULAR_SETTINGS = {
+if DEVELOPMENT_MODE is True:
+    SPECTACULAR_SETTINGS = {
 
-    # available SwaggerUI configuration parameters
-    # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+        # available SwaggerUI configuration parameters
+        # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
+        'TITLE': 'General DRF API',
+        'DESCRIPTION': 'A collection of live DRF APIs that run on various projects both web and mobile',
+        'VERSION': '1.0.0',
+        'TOS': "https://www.google.com/policies/terms/",
+        'CONTACT': {"name": "James Omare", "url": "https://portfolio-beryl-pi-22.vercel.app/", "email": "jamesomare922@gmail.com"},
+        'LICENSE': {"name": "Open License"},
+        'SERVERS': [{'url': 'http://127.0.0.1:8000/'}],
+        'TAGS': [],
+        'SERVE_INCLUDE_SCHEMA': False,
+        
+        
+    }
+else:
+    SPECTACULAR_SETTINGS = {
     'TITLE': 'General DRF API',
     'DESCRIPTION': 'A collection of live DRF APIs that run on various projects both web and mobile',
     'VERSION': '1.0.0',
     'TOS': "https://www.google.com/policies/terms/",
     'CONTACT': {"name": "James Omare", "url": "https://portfolio-beryl-pi-22.vercel.app/", "email": "jamesomare922@gmail.com"},
     'LICENSE': {"name": "Open License"},
-    'SERVERS': [{'url': 'http://127.0.0.1:8000/'}],
+    'SERVERS': [
+        {'url': 'https://kafkaesque404.pythonanywhere.com', 'description': 'Production server'},
+    ],
     'TAGS': [],
     'SERVE_INCLUDE_SCHEMA': False,
-    
-    
 }
 
 DJOSER = {
