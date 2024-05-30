@@ -40,7 +40,7 @@ DEBUG = getenv("DEBUG", "False") == "True"
 if DEVELOPMENT_MODE is True:
     ALLOWED_HOSTS = getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,valued-bluebird-usable.ngrok-free.app").split(",")
 else:
-    ALLOWED_HOSTS = ['.vercel.app', '.now.sh']
+    ALLOWED_HOSTS = ['kafkaesque404.pythonanywhere.com']
 
 
 # Application definition
