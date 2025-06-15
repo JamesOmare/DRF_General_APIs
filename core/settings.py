@@ -37,9 +37,13 @@ DEVELOPMENT_MODE = getenv("DEVELOPMENT_MODE", "False") == "True"
 DEBUG = getenv("DEBUG", "False") == "True"
 
 if DEVELOPMENT_MODE is True:
-    ALLOWED_HOSTS = getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,valued-bluebird-usable.ngrok-free.app").split(",")
+    ALLOWED_HOSTS = getenv(
+        "TEST_ALLOWED_HOSTS", "localhost"
+    ).split(",")
 else:
-    ALLOWED_HOSTS = ['kafkaesque404.pythonanywhere.com']
+    ALLOWED_HOSTS = getenv(
+        "DEV_ALLOWED_HOSTS", "localhost"
+    ).split(",")
 
 
 # Application definition
@@ -57,9 +61,8 @@ INSTALLED_APPS = [
     "social_django",
     "drf_spectacular",
     "storages",
-    
     # apps
-    'users',
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -99,36 +102,43 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 if DEVELOPMENT_MODE is True:
+    # DATABASES = {
+    #     "default": {
+    #         "ENGINE": "django.db.backends.sqlite3",
+    #         "NAME": BASE_DIR / "db.sqlite3",
+    #     }
+    # }
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
+        "default": dj_database_url.parse(
+            getenv("DATABASE_URL"), conn_health_checks=True
+        ),
     }
-elif len(sys.argv) > 1 and sys.argv[1] != 'collectstatic':
+elif len(sys.argv) > 1 and sys.argv[1] != "collectstatic":
     if getenv("DATABASE_URL", None) is None:
         raise Exception("DATABASE_URL environment variable not defined")
     DATABASES = {
-        "default": dj_database_url.parse(getenv("DATABASE_URL"), conn_health_checks=True),
+        "default": dj_database_url.parse(
+            getenv("DATABASE_URL"), conn_health_checks=True
+        ),
     }
 
 
-EMAIL_BACKEND = 'django_ses.SESBackend'
-DEFAULT_FROM_EMAIL = getenv('AWS_SES_FROM_EMAIL')
-AWS_SES_ACCESS_KEY_ID= getenv('AWS_SES_ACCESS_KEY_ID')
-AWS_SES_SECRET_ACCESS_KEY= getenv('AWS_SES_SECRET_ACCESS_KEY')
-AWS_SES_REGION_NAME = getenv('AWS_SES_REGION_NAME')
-AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
+EMAIL_BACKEND = "django_ses.SESBackend"
+DEFAULT_FROM_EMAIL = getenv("AWS_SES_FROM_EMAIL")
+AWS_SES_ACCESS_KEY_ID = getenv("AWS_SES_ACCESS_KEY_ID")
+AWS_SES_SECRET_ACCESS_KEY = getenv("AWS_SES_SECRET_ACCESS_KEY")
+AWS_SES_REGION_NAME = getenv("AWS_SES_REGION_NAME")
+AWS_SES_REGION_ENDPOINT = f"email.{AWS_SES_REGION_NAME}.amazonaws.com"
 AWS_SES_FROM_EMAIL = getenv("AWS_SES_FROM_EMAIL")
 
 
-AWS_ACCESS_KEY_ID = getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = getenv('AWS_SECRET_ACCESS_KEY')
+AWS_ACCESS_KEY_ID = getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = getenv("AWS_SECRET_ACCESS_KEY")
 USE_SES_V2 = True
 
 
-DOMAIN=getenv("DOMAIN")
-sITE_NAME="Full Auth"
+DOMAIN = getenv("DOMAIN")
+sITE_NAME = "Full Auth"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -167,7 +177,7 @@ USE_TZ = True
 if DEVELOPMENT_MODE is True:
     STATIC_URL = "static/"
     STATIC_ROOT = BASE_DIR / "static"
-    MEDIA_URL = "media/" 
+    MEDIA_URL = "media/"
     MEDIA_ROOT = BASE_DIR / "media"
 
 else:
@@ -175,109 +185,117 @@ else:
     AWS_S3_SECRET_ACCESS_KEY = getenv("AWS_S3_SECRET_ACCESS_KEY")
     AWS_S3_REGION_NAME = getenv("AWS_S3_REGION_NAME")
     AWS_STORAGE_BUCKET_NAME = getenv("AWS_STORAGE_BUCKET_NAME")
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
     AWS_DEFAULT_ACL = None
-    AWS_LOCATION='static'
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+    AWS_LOCATION = "static"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
     STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-    },
-    "staticfiles": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-    },
-}
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+    }
 
 
 AUTHENTICATION_BACKENDS = [
-    'social_core.backends.google.GoogleOAuth2',
-    'social_core.backends.facebook.FacebookOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.facebook.FacebookOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 REST_FRAMEWORK = {
-    
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+    "DEFAULT_AUTHENTICATION_CLASSES": [
         # 'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'users.authentication.CustomJWTAuthentiation',
+        "users.authentication.CustomJWTAuthentiation",
     ],
-     
-    'DEFAULT_PERMISSION_CLASSES': [
+    "DEFAULT_PERMISSION_CLASSES": [
         # 'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-        'rest_framework.permissions.IsAuthenticated',
+        "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 if DEVELOPMENT_MODE is True:
     SPECTACULAR_SETTINGS = {
-
         # available SwaggerUI configuration parameters
         # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
-        'TITLE': 'General DRF API',
-        'DESCRIPTION': 'A collection of live DRF APIs that run on various projects both web and mobile',
-        'VERSION': '1.0.0',
-        'TOS': "https://www.google.com/policies/terms/",
-        'CONTACT': {"name": "James Omare", "url": "https://portfolio-beryl-pi-22.vercel.app/", "email": "jamesomare922@gmail.com"},
-        'LICENSE': {"name": "Open License"},
-        'SERVERS': [{'url': 'http://127.0.0.1:8000/'}],
-        'TAGS': [],
-        'SERVE_INCLUDE_SCHEMA': False,
-        
-        
+        "TITLE": "General DRF API",
+        "DESCRIPTION": "A collection of live DRF APIs that run on various projects both web and mobile",
+        "VERSION": "1.0.0",
+        "TOS": "https://www.google.com/policies/terms/",
+        "CONTACT": {
+            "name": "James Omare",
+            "url": "https://portfolio-beryl-pi-22.vercel.app/",
+            "email": "jamesomare922@gmail.com",
+        },
+        "LICENSE": {"name": "Open License"},
+        "SERVERS": [{"url": "http://127.0.0.1:8000/"}],
+        "TAGS": [],
+        "SERVE_INCLUDE_SCHEMA": False,
     }
 else:
     SPECTACULAR_SETTINGS = {
-    'TITLE': 'General DRF API',
-    'DESCRIPTION': 'A collection of live DRF APIs that run on various projects both web and mobile',
-    'VERSION': '1.0.0',
-    'TOS': "https://www.google.com/policies/terms/",
-    'CONTACT': {"name": "James Omare", "url": "https://portfolio-beryl-pi-22.vercel.app/", "email": "jamesomare922@gmail.com"},
-    'LICENSE': {"name": "Open License"},
-    'SERVERS': [
-        {'url': 'https://kafkaesque404.pythonanywhere.com', 'description': 'Production server'},
-    ],
-    'TAGS': [],
-    'SERVE_INCLUDE_SCHEMA': False,
-}
+        "TITLE": "General DRF API",
+        "DESCRIPTION": "A collection of live DRF APIs that run on various projects both web and mobile",
+        "VERSION": "1.0.0",
+        "TOS": "https://www.google.com/policies/terms/",
+        "CONTACT": {
+            "name": "James Omare",
+            "url": "https://portfolio-beryl-pi-22.vercel.app/",
+            "email": "jamesomare922@gmail.com",
+        },
+        "LICENSE": {"name": "Open License"},
+        "SERVERS": [
+            {
+                "url": "https://kafkaesque404.pythonanywhere.com",
+                "description": "Production server",
+            },
+        ],
+        "TAGS": [],
+        "SERVE_INCLUDE_SCHEMA": False,
+    }
 
 DJOSER = {
-    'PASSWORD_RESET_CONFIRM_URL': 'password-reset/confirm/{uid}/{token}',
-    'ACTIVATION_URL': 'activate/{uid}/{token}',
-    'SEND_ACTIVATION_EMAIL': True,
-    'USER_CREATE_PASSWORD_RETYPE': True,
-    'PASSWORD_RESET_CONFIRM_RETYPE': True,
-    'TOKEN_MODEL': None,
-    'SOCIAL_AUTH_ALLOWED_REDIRECT_URIS': getenv("REDIRECT_URLS",).split(','),
+    "PASSWORD_RESET_CONFIRM_URL": "password-reset/confirm/{uid}/{token}",
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "SEND_ACTIVATION_EMAIL": True,
+    "USER_CREATE_PASSWORD_RETYPE": True,
+    "PASSWORD_RESET_CONFIRM_RETYPE": True,
+    "TOKEN_MODEL": None,
+    "SOCIAL_AUTH_ALLOWED_REDIRECT_URIS": getenv(
+        "REDIRECT_URLS",
+    ).split(","),
 }
 
-AUTH_COOKIE="access"
+AUTH_COOKIE = "access"
 AUTH_COOKIE_MAX_AGE = 60 * 60 * 24
-AUTH_COOKIE_ACCESS_MAX_AGE=60*5
-AUTH_COOKIE_REFRESH_MAX_AGE=60*60*24
-AUTH_COOKIE_SECURE=getenv("AUTH_COOKIE_SECURE", "True") == "True"
-AUTH_COOKIE_HTTP_ONLY=True
-AUTH_COOKIE_PATH="/"
-AUTH_COOKIE_SAMESITE="None"
+AUTH_COOKIE_ACCESS_MAX_AGE = 60 * 5
+AUTH_COOKIE_REFRESH_MAX_AGE = 60 * 60 * 24
+AUTH_COOKIE_SECURE = getenv("AUTH_COOKIE_SECURE", "True") == "True"
+AUTH_COOKIE_HTTP_ONLY = True
+AUTH_COOKIE_PATH = "/"
+AUTH_COOKIE_SAMESITE = "None"
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=getenv("GOOGLE_OAUTH2_KEY")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=getenv("GOOGLE_OAUTH2_SECRET")
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv("GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv("GOOGLE_OAUTH2_SECRET")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'openid',
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+    "openid",
 ]
-SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ['first_name', 'last_name']
-SOCIAL_AUTH_FACEBOOK_KEY=getenv("FACEBOOK_AUTH_KEY")
-SOCIAL_AUTH_FACEBOOK_SECRET=getenv("FACEBOOK_AUTH_SECRET_KEY")
-SOIAL_AUTH_FACEBOOK_SCOPE = ['email']
-SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
-    'fields': 'email, first_name, last_name'
-}
+SOCIAL_AUTH_GOOGLE_OAUTH2_EXTRA_DATA = ["first_name", "last_name"]
+SOCIAL_AUTH_FACEBOOK_KEY = getenv("FACEBOOK_AUTH_KEY")
+SOCIAL_AUTH_FACEBOOK_SECRET = getenv("FACEBOOK_AUTH_SECRET_KEY")
+SOIAL_AUTH_FACEBOOK_SCOPE = ["email"]
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {"fields": "email, first_name, last_name"}
 
-CORS_ALLOWED_ORIGINS=getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(',')
-CORS_ALLOWED_CREDENTIALS=True
+CORS_ALLOWED_ORIGINS = getenv(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000"
+).split(",")
+CORS_ALLOWED_CREDENTIALS = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
