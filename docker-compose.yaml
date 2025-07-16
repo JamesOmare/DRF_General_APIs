@@ -10,7 +10,7 @@ services:
     depends_on:
       - db
     expose:
-      - 8000
+      - 8000:8000
 
   db:
     image: postgres:15
@@ -22,15 +22,15 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
-  nginx:
-    image: nginx:latest
-    container_name: drf_general_nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx:/etc/nginx/conf.d
-    depends_on:
-      - web
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: drf_general_nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx:/etc/nginx/conf.d
+  #   depends_on:
+  #     - web
 
 volumes:
   postgres_data:
