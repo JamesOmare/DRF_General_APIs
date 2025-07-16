@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: drf_general_app
+    command: gunicorn your_project.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+    expose:
+      - 8000
+
+  db:
+    image: postgres:15
+    container_name: drf_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+  nginx:
+    image: nginx:latest
+    container_name: drf_general_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:

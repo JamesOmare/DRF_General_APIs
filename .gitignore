@@ -1,5 +1,6 @@
 # custom
 .env.local
+.env*
 admin.txt
 
 # Byte-compiled / optimized / DLL files

@@ -31,23 +31,31 @@ if path.isfile(dotenv_file):
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = getenv("SECRET_KEY", get_random_secret_key())
 
-DEVELOPMENT_MODE = getenv("DEVELOPMENT_MODE", "False") == "True"
+ENVIRONMENT = getenv("ENVIRONMENT", "development")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = getenv("DEBUG", "False") == "True"
 
-if DEVELOPMENT_MODE is True:
-    ALLOWED_HOSTS = getenv(
-        "TEST_ALLOWED_HOSTS", "localhost"
-    ).split(",")
-else:
-    ALLOWED_HOSTS = getenv(
-        "DEV_ALLOWED_HOSTS", "localhost"
-    ).split(",")
+# Prod safety check
+if ENVIRONMENT == "production" and DEBUG:
+    raise ValueError("DEBUG must be False in production.")
+
+
+# ALLOWED HOSTS
+if ENVIRONMENT == "testing":
+    ALLOWED_HOSTS = getenv("TEST_ALLOWED_HOSTS", "localhost").split(",")
+elif ENVIRONMENT == "production":
+    PROD_ALLOWED = getenv("PROD_ALLOWED_HOSTS")
+    if not PROD_ALLOWED:
+        raise ValueError(
+            "PROD_ALLOWED_HOSTS must be set in production environment."
+        )
+    ALLOWED_HOSTS = PROD_ALLOWED.split(",")
+else:  # defaults to development
+    ALLOWED_HOSTS = getenv("DEV_ALLOWED_HOSTS", "localhost").split(",")
 
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -101,19 +109,38 @@ WSGI_APPLICATION = "core.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-if DEVELOPMENT_MODE is True:
-    # DATABASES = {
-    #     "default": {
-    #         "ENGINE": "django.db.backends.sqlite3",
-    #         "NAME": BASE_DIR / "db.sqlite3",
-    #     }
-    # }
+# Validate DATABASE_URL early in production
+if ENVIRONMENT == "production":
+    database_url = getenv("DATABASE_URL")
+    if not database_url:
+        raise Exception("DATABASE_URL must be set in production")
     DATABASES = {
         "default": dj_database_url.parse(
-            getenv("DATABASE_URL"), conn_health_checks=True
+            database_url,
+            conn_health_checks=True,
         ),
     }
-elif len(sys.argv) > 1 and sys.argv[1] != "collectstatic":
+
+elif ENVIRONMENT == "testing":
+    database_url = getenv("TEST_DATABASE_URL", "sqlite:///:memory:")
+    DATABASES = {
+        "default": dj_database_url.parse(
+            database_url,
+            conn_health_checks=True,
+        ),
+    }
+
+else:  # development
+    database_url = getenv("DATABASE_URL", "sqlite:///db.sqlite3")
+    DATABASES = {
+        "default": dj_database_url.parse(
+            database_url,
+            conn_health_checks=True
+        ),
+    }
+
+
+if len(sys.argv) > 1 and sys.argv[1] != "collectstatic":
     if getenv("DATABASE_URL", None) is None:
         raise Exception("DATABASE_URL environment variable not defined")
     DATABASES = {
@@ -145,7 +172,10 @@ sITE_NAME = "Full Auth"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": (
+            "django.contrib.auth.password_validation."
+            "UserAttributeSimilarityValidator"
+        ),
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
@@ -174,7 +204,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-if DEVELOPMENT_MODE is True:
+if ENVIRONMENT == ["development", "testing"]:
     STATIC_URL = "static/"
     STATIC_ROOT = BASE_DIR / "static"
     MEDIA_URL = "media/"
@@ -218,7 +248,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
-if DEVELOPMENT_MODE is True:
+if ENVIRONMENT == "development" or ENVIRONMENT == "testing":
     SPECTACULAR_SETTINGS = {
         # available SwaggerUI configuration parameters
         # https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/
